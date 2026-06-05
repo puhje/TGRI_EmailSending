@@ -1,5 +1,4 @@
 const express = require('express');
-const nodemailer = require('nodemailer');
 
 const app = express();
 app.use(express.json());
@@ -7,16 +6,8 @@ app.use(express.json());
 // API key auth
 const API_KEY = process.env.API_KEY || 'tomodachi-smtp-2026';
 
-// Gmail SMTP transporter
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
-  auth: {
-    user: 'reginemariano.tomodachi@gmail.com',
-    pass: process.env.GMAIL_APP_PASSWORD || 'rvdb skrj puem gqva'
-  }
-});
+// Brevo API key
+const BREVO_API_KEY = process.env.BREVO_API_KEY || 'xsmtpsib-b1714fdbc35a09bcd5928800173a96a0a93ea0458c61292684cc2bf7951547a5-h4HD5ZLQjwAzy9Ku';
 
 // Health check endpoint
 app.get('/', (req, res) => {
@@ -39,15 +30,38 @@ app.post('/send-email', async (req, res) => {
   }
 
   try {
-    const info = await transporter.sendMail({
-      from: '"TGRI Information" <info@tomodachiinc.com>',
-      to: to,
+    // Parse comma-separated recipients into Brevo's format
+    const toAddresses = to.split(',').map(email => ({ email: email.trim() }));
+
+    const payload = {
+      sender: {
+        name: 'TGRI Information',
+        email: 'info@tomodachiinc.com'
+      },
+      to: toAddresses,
       subject: subject,
-      html: htmlBody
+      htmlContent: htmlBody
+    };
+
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'api-key': BREVO_API_KEY,
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify(payload)
     });
 
-    console.log(`Email sent: ${info.messageId} to ${to}`);
-    res.json({ success: true, messageId: info.messageId });
+    const data = await response.json();
+
+    if (response.ok) {
+      console.log(`Email sent via Brevo to ${to}, messageId: ${data.messageId}`);
+      res.json({ success: true, messageId: data.messageId });
+    } else {
+      console.error(`Brevo API error: ${JSON.stringify(data)}`);
+      res.status(500).json({ error: data.message || 'Brevo API error' });
+    }
 
   } catch (error) {
     console.error(`Failed to send email: ${error.message}`);
