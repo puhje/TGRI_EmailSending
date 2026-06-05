@@ -4,17 +4,17 @@ const nodemailer = require('nodemailer');
 const app = express();
 app.use(express.json());
 
-// Simple API key auth - change this to something secret
+// API key auth
 const API_KEY = process.env.API_KEY || 'tomodachi-smtp-2026';
 
-// SMTP transporter using your custom mail server
+// Gmail SMTP transporter
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'mail.tomodachiinc.com',
-  port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: true, // true for port 465
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true,
   auth: {
-    user: process.env.SMTP_USER || 'info@tomodachiinc.com',
-    pass: process.env.SMTP_PASS // Set via Render environment variable
+    user: 'reginemariano.tomodachi@gmail.com',
+    pass: process.env.GMAIL_APP_PASSWORD || 'rvdb skrj puem gqva'
   }
 });
 
