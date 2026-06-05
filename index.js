@@ -10,7 +10,7 @@ const API_KEY = process.env.API_KEY || 'tomodachi-smtp-2026';
 // SMTP transporter using your custom mail server
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'mail.tomodachiinc.com',
-  port: parseInt(process.env.SMTP_PORT || '465'),
+  port: parseInt(process.env.SMTP_PORT || '587'),
   secure: true, // true for port 465
   auth: {
     user: process.env.SMTP_USER || 'info@tomodachiinc.com',
